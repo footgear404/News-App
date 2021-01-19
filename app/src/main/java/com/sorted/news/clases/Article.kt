@@ -12,19 +12,24 @@ class Article {
     @SerializedName("author")
     @Expose
     var author = ""
+
     @SerializedName("title")
     @Expose
     var title = ""
+
+    @SerializedName("url")
+    @Expose
     var url = ""
 
     @SerializedName("urlToImage")
     @Expose
     var urlToImage = ""
 
-    var content = ""
     @SerializedName("description")
     @Expose
     var description = ""
 
+    @SerializedName("publishedAt")
+    @Expose
     var publishedAt = ""
 }

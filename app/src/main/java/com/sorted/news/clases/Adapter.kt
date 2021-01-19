@@ -34,7 +34,6 @@ class Adapter(private val article: List<Article>) : RecyclerView.Adapter<Adapter
 
             holder.publishedAt.text = pubDate
             holder.textViewTime.text = pubTime
-
     }
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val v = LayoutInflater.from(parent.context).inflate(R.layout.item, parent, false)
