@@ -16,12 +16,15 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.sorted.news.api.Interface
 import com.sorted.news.clases.*
+import com.sorted.news.data.NewsDatabase
 import kotlinx.android.synthetic.main.activity_main.*
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 
 class MainActivity : AppCompatActivity() {
@@ -30,8 +33,8 @@ class MainActivity : AppCompatActivity() {
     val BASE_URL = "http://newsapi.org/v2/"
     val LANGUAGE = "ru"
     // val API_KEY = "c5bc275364534b0793db86efd2c932d7" // - запасной 100 запросов в сутки foot4040
-    val API_KEY = "1a6fb5e756684298b67fbd7e9d8ffd77" // - чужой api
-    // val API_KEY = "421501f8d37543ec834392520c8b2e36" // - треш сток
+    // val API_KEY = "1a6fb5e756684298b67fbd7e9d8ffd77" // - чужой api
+    val API_KEY = "421501f8d37543ec834392520c8b2e36" // - треш сток
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,6 +62,7 @@ class MainActivity : AppCompatActivity() {
             override fun onResponse(call: Call<ArticlesList>, response: Response<ArticlesList>) {
                 Log.d(TAG, "${response.code()}")
                 if (response.code() == 200) {
+
                     val feedback = response.body()
                     Log.d(TAG, "Статус: ${feedback?.status}")
                     Log.d(TAG, "Кол-во получено: ${feedback?.totalResults}")
@@ -66,6 +70,7 @@ class MainActivity : AppCompatActivity() {
                     Log.d(TAG, "Всего записей: ${article!!.size}")
                     recyclerView.layoutManager = LinearLayoutManager(this@MainActivity, LinearLayout.VERTICAL, false)
                     val adapter = Adapter(article)
+                    addToDb()
                     recyclerView.adapter = adapter
                 }
                 else {
@@ -112,6 +117,18 @@ class MainActivity : AppCompatActivity() {
         searchMenuItem.icon.setVisible(false, false)
         return true
     }
-
+    fun addToDb(){
+        GlobalScope.launch {
+            Log.d(TAG, "GlobalScope -> addToDb")
+//            val db = NewsDatabase(this@MainActivity)
+//            db.articleDao().insert(Article(**********))
+//            val data = db.articleDao().getAll()
+//
+//            data.forEach {
+//                println(it)
+//                Log.d("MyTag", "$it")
+//            }
+        }
+    }
 }
 

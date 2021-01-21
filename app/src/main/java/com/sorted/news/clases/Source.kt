@@ -9,5 +9,4 @@ class Source {
     @Expose
     var name = ""
 
-
 }
