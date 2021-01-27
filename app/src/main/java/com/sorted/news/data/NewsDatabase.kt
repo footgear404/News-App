@@ -5,9 +5,9 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.sorted.news.api.ArticleDao
-import com.sorted.news.clases.Article
+import com.sorted.news.clases.ArticleEntity
 
-@Database(entities = [Article::class], version = 1)
+@Database(entities = [ArticleEntity::class], version = 1, exportSchema = false)
 abstract class NewsDatabase: RoomDatabase() {
     abstract fun articleDao(): ArticleDao
 

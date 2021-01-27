@@ -11,7 +11,7 @@ class ArticlesList {
 
         @SerializedName("articles")
         @Expose
-        var articles: List<Article>? = null
+        var articles: List<ArticleResponse>? = null
 
         @SerializedName("totalResults")
         @Expose

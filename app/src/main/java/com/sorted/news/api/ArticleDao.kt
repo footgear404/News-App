@@ -1,20 +1,21 @@
 package com.sorted.news.api
 
 import androidx.room.*
-import com.sorted.news.clases.Article
+import com.sorted.news.clases.ArticleEntity
+import com.sorted.news.clases.ArticleResponse
 
 @Dao
 interface ArticleDao {
-    @Query("SELECT * FROM article")
-    fun getAll(): List<Article>
+    @Query("SELECT * FROM articleentity")
+    fun getAll(): List<ArticleEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insert(article: Article)
+    fun insert(article: ArticleEntity)
 
     @Delete
-    fun delete(article: Article)
+    fun delete(article: ArticleEntity)
 
     @Update
-    fun updateTodo(article: Article)
+    fun updateTodo(article: ArticleEntity)
 
 }

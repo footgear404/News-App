@@ -32,6 +32,7 @@ class MainActivity : AppCompatActivity() {
     val TAG = "myLog"
     val BASE_URL = "http://newsapi.org/v2/"
     val LANGUAGE = "ru"
+
     // val API_KEY = "c5bc275364534b0793db86efd2c932d7" // - запасной 100 запросов в сутки foot4040
     // val API_KEY = "1a6fb5e756684298b67fbd7e9d8ffd77" // - чужой api
     val API_KEY = "421501f8d37543ec834392520c8b2e36" // - треш сток
@@ -70,7 +71,7 @@ class MainActivity : AppCompatActivity() {
                     Log.d(TAG, "Всего записей: ${article!!.size}")
                     recyclerView.layoutManager = LinearLayoutManager(this@MainActivity, LinearLayout.VERTICAL, false)
                     val adapter = Adapter(article)
-                    addToDb()
+                    addToDb(article)
                     recyclerView.adapter = adapter
                 }
                 else {
@@ -96,7 +97,7 @@ class MainActivity : AppCompatActivity() {
         val searchMenuItem = menu.findItem(R.id.action_search)
 
         searchView.setSearchableInfo(searchManager.getSearchableInfo(componentName))
-        searchView.queryHint = "Search latest news..."
+        searchView.queryHint = "Чё искать-то?"
         searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 if (query != null) {
@@ -117,16 +118,22 @@ class MainActivity : AppCompatActivity() {
         searchMenuItem.icon.setVisible(false, false)
         return true
     }
-    fun addToDb(){
+    fun addToDb(article: List<ArticleResponse>){
         GlobalScope.launch {
-            Log.d(TAG, "GlobalScope -> addToDb")
-//            val db = NewsDatabase(this@MainActivity)
-//            db.articleDao().insert(Article(**********))
-//            val data = db.articleDao().getAll()
-//
+            Log.d(TAG, "addToDb -> GlobalScope")
+            val db = NewsDatabase(this@MainActivity)
+            for (i in article){
+                Log.d(TAG, "ArticleResponse - $i")
+                Log.d(TAG,"ArticleEntity ${ArticleMapper().returnArticleEntity(i)}")
+               // db.articleDao().insert(ArticleMapper(i).returnArticleEntity(i))
+            }
+            //db.articleDao().insert(ArticleEntity("One", "Two", "Three", "Four","Five", "Six"))
+            val data = db.articleDao().getAll()
+
 //            data.forEach {
 //                println(it)
-//                Log.d("MyTag", "$it")
+//                Log.i(TAG, "$it")
+//                Log.i(TAG, "Всего записей в БД: ${data.size}")
 //            }
         }
     }

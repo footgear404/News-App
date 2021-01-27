@@ -15,11 +15,11 @@ import java.util.*
 
 
 @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
-class Adapter(private val article: List<Article>) : RecyclerView.Adapter<Adapter.ViewHolder>() {
+class Adapter(private val article: List<ArticleResponse>) : RecyclerView.Adapter<Adapter.ViewHolder>() {
     @SuppressLint("SimpleDateFormat", "SetTextI18n")
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            val item: Article = article[position]
-            val source = article[1].source?.name
+            val item: ArticleResponse = article[position]
+            val source = article[position].source?.name ?: "no name"
             holder.textViewName.text = item.author
             holder.textViewDesc.text = item.description
             holder.textViewTitle.text = item.title
