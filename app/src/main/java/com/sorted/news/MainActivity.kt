@@ -61,17 +61,19 @@ class MainActivity : AppCompatActivity() {
         call.enqueue(object : Callback<ArticlesList> {
             @SuppressLint("WrongConstant")
             override fun onResponse(call: Call<ArticlesList>, response: Response<ArticlesList>) {
-                Log.d(TAG, "${response.code()}")
+                Log.d(TAG, "response code: ${response.code()}")
                 if (response.code() == 200) {
-
                     val feedback = response.body()
                     Log.d(TAG, "Статус: ${feedback?.status}")
                     Log.d(TAG, "Кол-во получено: ${feedback?.totalResults}")
-                    val article = feedback?.articles
-                    Log.d(TAG, "Всего записей: ${article!!.size}")
+
+                    val articles = feedback?.articles!!
+                    Log.d(TAG, "Всего записей: ${articles.size}")
+
+                    addToDb(articles)
+
                     recyclerView.layoutManager = LinearLayoutManager(this@MainActivity, LinearLayout.VERTICAL, false)
-                    val adapter = Adapter(article)
-                    addToDb(article)
+                    val adapter = Adapter(ArticleMapper().returnArticleListEntity(articles))
                     recyclerView.adapter = adapter
                 }
                 else {
@@ -82,8 +84,20 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
+            @SuppressLint("WrongConstant")
             override fun onFailure(call: Call<ArticlesList>, t: Throwable) {
-                Log.d(TAG, t.toString())
+                Log.e(TAG, "onFailure response: $t")
+                GlobalScope.launch {
+                    val db = NewsDatabase(this@MainActivity)
+                    Log.e(TAG, "DB done")
+                    val data = db.articleDao().getAll()
+                    Log.e(TAG, "Data get done")
+
+                    recyclerView.layoutManager =
+                        LinearLayoutManager(this@MainActivity, LinearLayout.VERTICAL, false)
+                    val adapter = Adapter(data)
+                    recyclerView.adapter = adapter
+                }
             }
         })
 
@@ -122,19 +136,17 @@ class MainActivity : AppCompatActivity() {
         GlobalScope.launch {
             Log.d(TAG, "addToDb -> GlobalScope")
             val db = NewsDatabase(this@MainActivity)
-            for (i in article){
-                Log.d(TAG, "ArticleResponse - $i")
-                Log.d(TAG,"ArticleEntity ${ArticleMapper().returnArticleEntity(i)}")
-               // db.articleDao().insert(ArticleMapper(i).returnArticleEntity(i))
-            }
-            //db.articleDao().insert(ArticleEntity("One", "Two", "Three", "Four","Five", "Six"))
             val data = db.articleDao().getAll()
+            if (data.size > 100) {
+                db.articleDao().deleteAll()
+            }
+            db.articleDao().insert(ArticleMapper().returnArticleListEntity(article))
+            //db.articleDao().insert(ArticleEntity("One", "Two", "Three", "Four","Five", "Six"))
 
-//            data.forEach {
-//                println(it)
-//                Log.i(TAG, "$it")
-//                Log.i(TAG, "Всего записей в БД: ${data.size}")
-//            }
+            data.forEach {
+                Log.i(TAG, "$it")
+            }
+            Log.i(TAG, "Всего записей в БД: ${data.size}")
         }
     }
 }

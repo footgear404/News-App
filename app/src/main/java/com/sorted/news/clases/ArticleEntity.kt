@@ -9,17 +9,17 @@ data class ArticleEntity (
     var title:String = "",
 
     @ColumnInfo(name = "source")
-    var source: String = "",
+    var source: String? = "",
 
     @ColumnInfo(name = "author")
-    var author: String = "",
+    var author: String? = "",
 
     @ColumnInfo(name = "urlToImage")
-    var urlToImage: String = "",
+    var urlToImage: String? = "",
 
     @ColumnInfo(name = "description")
-    var description: String = "",
+    var description: String? = "",
 
     @ColumnInfo(name = "publishedAt")
-    var publishedAt: String = ""
+    var publishedAt: String? = ""
 )
