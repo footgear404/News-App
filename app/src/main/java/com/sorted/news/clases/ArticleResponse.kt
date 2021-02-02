@@ -32,4 +32,8 @@ class ArticleResponse {
     @SerializedName("publishedAt")
     @Expose
     var publishedAt = ""
+
+    @SerializedName("url")
+    @Expose
+    var url = ""
 }

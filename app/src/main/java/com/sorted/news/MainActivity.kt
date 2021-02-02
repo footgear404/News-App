@@ -3,7 +3,10 @@ package com.sorted.news
 import android.annotation.SuppressLint
 import android.app.SearchManager
 import android.content.Context
+import android.net.ConnectivityManager
 import android.os.Bundle
+import android.os.Handler
+import android.os.Message
 import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
@@ -12,12 +15,14 @@ import android.widget.SearchView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.sorted.news.api.Interface
 import com.sorted.news.clases.*
 import com.sorted.news.data.NewsDatabase
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.coroutines.Dispatchers
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -25,82 +30,97 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
+const val TAG = "myLog"
+const val BASE_URL = "http://newsapi.org/v2/"
+const val LANGUAGE = "ru"
 
-class MainActivity : AppCompatActivity() {
-
-    val TAG = "myLog"
-    val BASE_URL = "http://newsapi.org/v2/"
-    val LANGUAGE = "ru"
-
+class MainActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
     // val API_KEY = "c5bc275364534b0793db86efd2c932d7" // - запасной 100 запросов в сутки foot4040
-    // val API_KEY = "1a6fb5e756684298b67fbd7e9d8ffd77" // - чужой api
-    val API_KEY = "421501f8d37543ec834392520c8b2e36" // - треш сток
+     val API_KEY = "1a6fb5e756684298b67fbd7e9d8ffd77" // - чужой api
+    //val API_KEY = "421501f8d37543ec834392520c8b2e36" // - треш сток
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
         getNews("")
-
+        swipe_refresh_layout.setOnRefreshListener(this)
     }
 
+    @SuppressLint("WrongConstant")
     private fun getNews(keyword: String) {
-        val retrofit : Retrofit = Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-        val api = retrofit.create(Interface::class.java)
-        val call: Call<ArticlesList>
-        call = if (keyword.isNotEmpty()) {
-            api.getNewsSearch(keyword, LANGUAGE, "publishedAt", API_KEY)
+
+        swipe_refresh_layout.isRefreshing = true
+
+        if (isOnline(this@MainActivity)){
+            Log.d(TAG, "Internet connection result: ${isOnline(this@MainActivity)}")
+            val retrofit : Retrofit = Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+            val api = retrofit.create(Interface::class.java)
+            val call: Call<ArticlesList>
+            call = if (keyword.isNotEmpty()) {
+                api.getNewsSearch(keyword, LANGUAGE, "publishedAt", API_KEY)
+            } else {
+                api.getNews(LANGUAGE, API_KEY)
+            }
+
+            call.enqueue(object : Callback<ArticlesList> {
+                override fun onResponse(call: Call<ArticlesList>, response: Response<ArticlesList>) {
+                    Log.d(TAG, "Response code: ${response.code()}")
+                    if (response.code() == 200) {
+                        val feedback = response.body()
+                        Log.d(TAG, "Status: ${feedback?.status}")
+                        val articles = feedback?.articles!!
+                        Log.d(TAG, "Article list size: ${articles.size}")
+
+                        recyclerViewBuilderFromArticleResponse(articles)
+                        addToDb(articles)
+                        swipe_refresh_layout.isRefreshing = false
+
+                    } else {
+                        val type = object : TypeToken<ArticlesList>() {}.type
+                        val errorResponse: ArticlesList? = Gson().fromJson(response.errorBody()!!.charStream(), type)
+                        Log.e(TAG, "${errorResponse?.message}")
+                        Toast.makeText(this@MainActivity, errorResponse?.message, Toast.LENGTH_LONG).show()
+                    }
+                }
+
+                override fun onFailure(call: Call<ArticlesList>, t: Throwable) {
+                    Log.e(TAG, "onFailure response: $t")
+                    recyclerViewBuildFromDb(keyword)
+                }
+            })
         } else {
-            api.getNews(LANGUAGE, API_KEY)
+            swipe_refresh_layout.isRefreshing = false
+            Log.d(TAG, "Check your internet connection.")
+            Toast.makeText(this, "Offline mode: \nCheck your internet connection.", Toast.LENGTH_SHORT).show()
+            recyclerViewBuildFromDb(keyword)
         }
+    }
 
-        call.enqueue(object : Callback<ArticlesList> {
-            @SuppressLint("WrongConstant")
-            override fun onResponse(call: Call<ArticlesList>, response: Response<ArticlesList>) {
-                Log.d(TAG, "response code: ${response.code()}")
-                if (response.code() == 200) {
-                    val feedback = response.body()
-                    Log.d(TAG, "Статус: ${feedback?.status}")
-                    Log.d(TAG, "Кол-во получено: ${feedback?.totalResults}")
-
-                    val articles = feedback?.articles!!
-                    Log.d(TAG, "Всего записей: ${articles.size}")
-
-                    addToDb(articles)
-
-                    recyclerView.layoutManager = LinearLayoutManager(this@MainActivity, LinearLayout.VERTICAL, false)
-                    val adapter = Adapter(ArticleMapper().returnArticleListEntity(articles))
-                    recyclerView.adapter = adapter
-                }
-                else {
-                    val type = object : TypeToken<ArticlesList>() {}.type
-                    val errorResponse: ArticlesList? = Gson().fromJson(response.errorBody()!!.charStream(), type)
-                    Log.e(TAG, "${errorResponse?.message}")
-                    Toast.makeText(this@MainActivity, errorResponse?.message, Toast.LENGTH_LONG).show()
-                }
+    @SuppressLint("WrongConstant")
+    private fun recyclerViewBuildFromDb(keyword: String) {
+        var data: List<ArticleEntity>
+        runBlocking(Dispatchers.IO) {
+            val db = NewsDatabase(this@MainActivity)
+            data = db.articleDao().search(keyword)
+            data.forEach {
+                Log.d(TAG, it.toString())
             }
+        }
+            recyclerView.layoutManager = LinearLayoutManager(this@MainActivity, LinearLayout.VERTICAL, false)
+            val adapter = Adapter(data)
+            recyclerView.adapter = adapter
+    }
 
-            @SuppressLint("WrongConstant")
-            override fun onFailure(call: Call<ArticlesList>, t: Throwable) {
-                Log.e(TAG, "onFailure response: $t")
-                GlobalScope.launch {
-                    val db = NewsDatabase(this@MainActivity)
-                    Log.e(TAG, "DB done")
-                    val data = db.articleDao().getAll()
-                    Log.e(TAG, "Data get done")
-
-                    recyclerView.layoutManager =
-                        LinearLayoutManager(this@MainActivity, LinearLayout.VERTICAL, false)
-                    val adapter = Adapter(data)
-                    recyclerView.adapter = adapter
-                }
-            }
-        })
-
+    @SuppressLint("WrongConstant")
+    private fun recyclerViewBuilderFromArticleResponse(articles: List<ArticleResponse>) {
+        recyclerView.layoutManager = LinearLayoutManager(this@MainActivity, LinearLayout.VERTICAL, false)
+        val adapter = Adapter(ArticleMapper().returnArticleListEntity(articles))
+        recyclerView.adapter = adapter
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -112,6 +132,7 @@ class MainActivity : AppCompatActivity() {
 
         searchView.setSearchableInfo(searchManager.getSearchableInfo(componentName))
         searchView.queryHint = "Чё искать-то?"
+
         searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 if (query != null) {
@@ -121,10 +142,11 @@ class MainActivity : AppCompatActivity() {
                 }
                 return false
             }
-
             override fun onQueryTextChange(newText: String?): Boolean {
                 if (newText != null) {
-                    getNews(newText)
+                    if (newText.length > 2 || newText.isEmpty()) {
+                        getNews(newText)
+                    }
                 }
                 return false
             }
@@ -132,22 +154,29 @@ class MainActivity : AppCompatActivity() {
         searchMenuItem.icon.setVisible(false, false)
         return true
     }
-    fun addToDb(article: List<ArticleResponse>){
+
+    fun addToDb(article: List<ArticleResponse>) {
         GlobalScope.launch {
-            Log.d(TAG, "addToDb -> GlobalScope")
             val db = NewsDatabase(this@MainActivity)
-            val data = db.articleDao().getAll()
+            var data = db.articleDao().getAll()
             if (data.size > 100) {
                 db.articleDao().deleteAll()
             }
             db.articleDao().insert(ArticleMapper().returnArticleListEntity(article))
-            //db.articleDao().insert(ArticleEntity("One", "Two", "Three", "Four","Five", "Six"))
-
-            data.forEach {
-                Log.i(TAG, "$it")
-            }
+            data = db.articleDao().getAll()
+            data.forEach { Log.i(TAG, "$it") }
             Log.i(TAG, "Всего записей в БД: ${data.size}")
         }
+    }
+
+    private fun isOnline(context: Context): Boolean {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val networkInfo = connectivityManager.activeNetworkInfo
+        return networkInfo != null && networkInfo.isConnected
+    }
+
+    override fun onRefresh() {
+        getNews("")
     }
 }
 

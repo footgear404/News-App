@@ -7,10 +7,11 @@ class ArticleMapper {
             ArticleEntity(
                 title = item.title,
                 author = item.author,
-                source = item.source?.name ?: "Oops, have no source",
+                source = item.source?.name ?: "Oops, have no source name",
                 urlToImage = item.urlToImage,
                 description = item.description,
-                publishedAt = item.publishedAt
+                publishedAt = item.publishedAt,
+                url = item.url
             )
         }
 
@@ -20,10 +21,11 @@ class ArticleMapper {
         return ArticleEntity(
             title = article.title,
             author = article.author,
-            source = article.source?.name ?: "Oops, have no source",
+            source = article.source?.name ?: "Oops, have no source name",
             urlToImage = article.urlToImage,
             description = article.description,
-            publishedAt = article.publishedAt
+            publishedAt = article.publishedAt,
+            url = article.url
         )
     }
 }

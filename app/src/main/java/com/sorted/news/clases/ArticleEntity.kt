@@ -21,5 +21,8 @@ data class ArticleEntity (
     var description: String? = "",
 
     @ColumnInfo(name = "publishedAt")
-    var publishedAt: String? = ""
+    var publishedAt: String? = "",
+
+    @ColumnInfo(name = "url")
+    var url: String? = ""
 )
