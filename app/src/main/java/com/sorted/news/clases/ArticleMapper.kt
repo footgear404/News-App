@@ -1,5 +1,8 @@
 package com.sorted.news.clases
 
+import com.sorted.news.clases.models.ArticleResponse
+import com.sorted.news.clases.models.ArticleEntity
+
 class ArticleMapper {
 
     fun returnArticleListEntity(articleList: List<ArticleResponse>): List<ArticleEntity> {

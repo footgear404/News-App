@@ -1,11 +1,8 @@
-package com.sorted.news.clases
+package com.sorted.news.clases.models
 
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.PrimaryKey
-import androidx.room.Query
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
+import com.sorted.news.clases.models.Source
 
 class ArticleResponse {
 

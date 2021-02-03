@@ -1,6 +1,6 @@
-package com.sorted.news.api
+package com.sorted.news.interfaces
 
-import com.sorted.news.clases.ArticlesList
+import com.sorted.news.clases.models.ArticlesList
 import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Query

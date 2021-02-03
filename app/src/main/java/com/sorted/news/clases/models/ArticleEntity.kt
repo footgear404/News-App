@@ -1,4 +1,4 @@
-package com.sorted.news.clases
+package com.sorted.news.clases.models
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey

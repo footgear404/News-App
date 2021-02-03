@@ -4,8 +4,8 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.sorted.news.api.ArticleDao
-import com.sorted.news.clases.ArticleEntity
+import com.sorted.news.clases.models.ArticleEntity
+import com.sorted.news.interfaces.ArticleDao
 
 @Database(entities = [ArticleEntity::class], version = 1, exportSchema = false)
 abstract class NewsDatabase: RoomDatabase() {

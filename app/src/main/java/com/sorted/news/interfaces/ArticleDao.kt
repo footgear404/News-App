@@ -1,8 +1,7 @@
-package com.sorted.news.api
+package com.sorted.news.interfaces
 
 import androidx.room.*
-import com.sorted.news.clases.ArticleEntity
-import com.sorted.news.clases.ArticleResponse
+import com.sorted.news.clases.models.ArticleEntity
 
 @Dao
 interface ArticleDao {

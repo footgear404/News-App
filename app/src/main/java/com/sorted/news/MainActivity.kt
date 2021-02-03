@@ -3,10 +3,10 @@ package com.sorted.news
 import android.annotation.SuppressLint
 import android.app.SearchManager
 import android.content.Context
+import android.content.Intent
 import android.net.ConnectivityManager
+import android.net.Uri
 import android.os.Bundle
-import android.os.Handler
-import android.os.Message
 import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
@@ -18,8 +18,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.sorted.news.api.Interface
+import com.sorted.news.adapter.Adapter
+import com.sorted.news.interfaces.Interface
 import com.sorted.news.clases.*
+import com.sorted.news.clases.models.ArticleResponse
+import com.sorted.news.clases.models.ArticlesList
+import com.sorted.news.clases.models.ArticleEntity
 import com.sorted.news.data.NewsDatabase
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.Dispatchers
@@ -36,7 +40,8 @@ const val TAG = "myLog"
 const val BASE_URL = "http://newsapi.org/v2/"
 const val LANGUAGE = "ru"
 
-class MainActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
+class MainActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener,
+    Adapter.OnItemClickListener {
     // val API_KEY = "c5bc275364534b0793db86efd2c932d7" // - запасной 100 запросов в сутки foot4040
      val API_KEY = "1a6fb5e756684298b67fbd7e9d8ffd77" // - чужой api
     //val API_KEY = "421501f8d37543ec834392520c8b2e36" // - треш сток
@@ -50,7 +55,6 @@ class MainActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
 
     @SuppressLint("WrongConstant")
     private fun getNews(keyword: String) {
-
         swipe_refresh_layout.isRefreshing = true
 
         if (isOnline(this@MainActivity)){
@@ -107,20 +111,21 @@ class MainActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
         runBlocking(Dispatchers.IO) {
             val db = NewsDatabase(this@MainActivity)
             data = db.articleDao().search(keyword)
-            data.forEach {
-                Log.d(TAG, it.toString())
-            }
+//            data.forEach {
+//                Log.d(TAG, it.toString())
+//            }
         }
             recyclerView.layoutManager = LinearLayoutManager(this@MainActivity, LinearLayout.VERTICAL, false)
-            val adapter = Adapter(data)
+            val adapter = Adapter(data, this)
             recyclerView.adapter = adapter
     }
 
     @SuppressLint("WrongConstant")
     private fun recyclerViewBuilderFromArticleResponse(articles: List<ArticleResponse>) {
         recyclerView.layoutManager = LinearLayoutManager(this@MainActivity, LinearLayout.VERTICAL, false)
-        val adapter = Adapter(ArticleMapper().returnArticleListEntity(articles))
+        val adapter = Adapter(ArticleMapper().returnArticleListEntity(articles), this)
         recyclerView.adapter = adapter
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -131,7 +136,7 @@ class MainActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
         val searchMenuItem = menu.findItem(R.id.action_search)
 
         searchView.setSearchableInfo(searchManager.getSearchableInfo(componentName))
-        searchView.queryHint = "Чё искать-то?"
+        searchView.queryHint = "Введите запрос..."
 
         searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
@@ -165,7 +170,7 @@ class MainActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
             db.articleDao().insert(ArticleMapper().returnArticleListEntity(article))
             data = db.articleDao().getAll()
             data.forEach { Log.i(TAG, "$it") }
-            Log.i(TAG, "Всего записей в БД: ${data.size}")
+            Log.i(TAG, "Article size: ${data.size}")
         }
     }
 
@@ -177,6 +182,13 @@ class MainActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener {
 
     override fun onRefresh() {
         getNews("")
+    }
+
+    override fun onItemClick(item: ArticleEntity, position: Int) {
+        // Toast.makeText(this, item.url, Toast.LENGTH_LONG).show()
+        val browserIntent = Intent(this, WebViewActivity::class.java)
+        browserIntent.putExtra("articleUrl", item.url)
+        startActivity(browserIntent)
     }
 }
 
