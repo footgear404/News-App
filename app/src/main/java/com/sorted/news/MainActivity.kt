@@ -57,8 +57,8 @@ class MainActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener,
     private fun getNews(keyword: String) {
         swipe_refresh_layout.isRefreshing = true
 
-        if (isOnline(this@MainActivity)){
-            Log.d(TAG, "Internet connection result: ${isOnline(this@MainActivity)}")
+        if (OnlineCheck().isOnline(this)){
+            Log.d(TAG, "Internet connection result: ${OnlineCheck().isOnline(this)}")
             val retrofit : Retrofit = Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
@@ -111,9 +111,6 @@ class MainActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener,
         runBlocking(Dispatchers.IO) {
             val db = NewsDatabase(this@MainActivity)
             data = db.articleDao().search(keyword)
-//            data.forEach {
-//                Log.d(TAG, it.toString())
-//            }
         }
             recyclerView.layoutManager = LinearLayoutManager(this@MainActivity, LinearLayout.VERTICAL, false)
             val adapter = Adapter(data, this)
@@ -134,6 +131,14 @@ class MainActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener,
         val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
         val searchView = menu?.findItem(R.id.action_search)?.actionView as SearchView
         val searchMenuItem = menu.findItem(R.id.action_search)
+
+        val settingsMenuItem = menu.findItem(R.id.action_setting)
+
+        settingsMenuItem.setOnMenuItemClickListener {
+            val settingsIntent = Intent(this, SettingsActivity::class.java)
+            startActivity(settingsIntent)
+            return@setOnMenuItemClickListener true
+        }
 
         searchView.setSearchableInfo(searchManager.getSearchableInfo(componentName))
         searchView.queryHint = "Введите запрос..."
@@ -172,12 +177,6 @@ class MainActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener,
             data.forEach { Log.i(TAG, "$it") }
             Log.i(TAG, "Article size: ${data.size}")
         }
-    }
-
-    private fun isOnline(context: Context): Boolean {
-        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val networkInfo = connectivityManager.activeNetworkInfo
-        return networkInfo != null && networkInfo.isConnected
     }
 
     override fun onRefresh() {
