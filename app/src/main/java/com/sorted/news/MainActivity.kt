@@ -4,8 +4,6 @@ import android.annotation.SuppressLint
 import android.app.SearchManager
 import android.content.Context
 import android.content.Intent
-import android.net.ConnectivityManager
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -39,16 +37,18 @@ import kotlinx.coroutines.runBlocking
 const val TAG = "myLog"
 const val BASE_URL = "http://newsapi.org/v2/"
 const val LANGUAGE = "ru"
+const val API_KEY = "1a6fb5e756684298b67fbd7e9d8ffd77"
+// val API_KEY = "c5bc275364534b0793db86efd2c932d7" // - запасной 100 запросов в сутки foot4040
+// val API_KEY = "421501f8d37543ec834392520c8b2e36" // - запасной треш сток
+
 
 class MainActivity : AppCompatActivity(), SwipeRefreshLayout.OnRefreshListener,
     Adapter.OnItemClickListener {
-    // val API_KEY = "c5bc275364534b0793db86efd2c932d7" // - запасной 100 запросов в сутки foot4040
-     val API_KEY = "1a6fb5e756684298b67fbd7e9d8ffd77" // - чужой api
-    //val API_KEY = "421501f8d37543ec834392520c8b2e36" // - треш сток
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
         getNews("")
         swipe_refresh_layout.setOnRefreshListener(this)
     }
